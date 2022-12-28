@@ -7,8 +7,6 @@ type ChatMessageProps = {
 }
 
 const ChatMessage = ({ message, user }: ChatMessageProps) => {
-  console.log(user)
-
   return (
     <Flex
       w='full'
@@ -21,7 +19,7 @@ const ChatMessage = ({ message, user }: ChatMessageProps) => {
       <Text color='blue.500' w='80px' mr='10px'>
         {user || 'oldg-pt'}
       </Text>
-      <Text>{message}</Text>
+      <Text w='full'>{message}</Text>
     </Flex>
   )
 }
