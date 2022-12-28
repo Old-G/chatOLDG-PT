@@ -3,32 +3,32 @@ import Image from 'next/image'
 import { Inter } from '@next/font/google'
 import styles from '../styles/Home.module.css'
 import { useCallback, useState } from 'react'
-import { Button, Flex, FormControl, Input, Text } from '@chakra-ui/react'
+import {
+  Button,
+  Flex,
+  FormControl,
+  Input,
+  Text,
+  VStack,
+  useColorMode,
+} from '@chakra-ui/react'
+import ChatMessage from '../components/ChatMessage'
 
 export default function Home() {
   const [input, setInput] = useState('')
   const [chatLog, setChatLog] = useState([
     {
-      user: 'gpt',
+      user: 'oldg-pt',
       message: 'Hello, how I can help you today?',
     },
-    {
-      user: 'me',
-      message: 'I want to use ChatGPT today.',
-    },
   ])
-
-  console.log(chatLog)
+  const { colorMode, toggleColorMode } = useColorMode()
 
   const handleClearChat = useCallback(() => {
     setChatLog([
       {
-        user: 'gpt',
+        user: 'oldg-pt',
         message: 'Hello, how I can help you today?',
-      },
-      {
-        user: 'me',
-        message: 'I want to use ChatGPT today.',
       },
     ])
   }, [])
@@ -57,7 +57,7 @@ export default function Home() {
         })
 
         const data = await response.json()
-        setChatLog([...chatLogNew, { user: 'gpt', message: data?.message }])
+        setChatLog([...chatLogNew, { user: 'oldg-pt', message: data?.message }])
 
         if (response.status !== 200) {
           throw (
@@ -74,6 +74,51 @@ export default function Home() {
     [chatLog, input]
   )
 
+  const handleKeydown = useCallback(
+    async (event: { key: string }) => {
+      if (event.key === 'Enter') {
+        let chatLogNew = [...chatLog, { user: 'me', message: `${input}` }]
+
+        setInput('')
+        setChatLog(chatLogNew)
+
+        try {
+          const messages = chatLogNew
+            ?.map((message: { message: string }) => message.message)
+            .join('\n')
+
+          const response = await fetch('/api/openaiApi', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: messages,
+            }),
+          })
+
+          const data = await response.json()
+          setChatLog([
+            ...chatLogNew,
+            { user: 'oldg-pt', message: data?.message },
+          ])
+
+          if (response.status !== 200) {
+            throw (
+              data.error ||
+              new Error(`Request failed with status ${response.status}`)
+            )
+          }
+        } catch (error: any) {
+          // Consider implementing your own error handling logic here
+          console.error(error)
+          alert(error.message)
+        }
+      }
+    },
+    [chatLog, input]
+  )
+
   return (
     <>
       <Head>
@@ -82,28 +127,79 @@ export default function Home() {
         <meta name='viewport' content='width=device-width, initial-scale=1' />
         <link rel='icon' href='/favicon.ico' />
       </Head>
-      <main className={styles.main}>
-        <Button onClick={handleClearChat}>New Chat</Button>
-        <Flex direction='column' align='left' maxW='900px'>
-          {chatLog?.map(({ message, user }, idx) => (
-            <Flex key={idx} align='center' mb='15px'>
-              <Text color='blue.400' mr='10px'>
-                {user || 'chatGPT'}
-              </Text>
-              <Text color='gray.700'>{message}</Text>
-            </Flex>
-          ))}
+      <Flex
+        direction='column'
+        maxW='1200px'
+        align='center'
+        m='0 auto'
+        p='0 30px'
+        h='100vh'
+      >
+        <Flex
+          position='fixed'
+          align='center'
+          justify='space-between'
+          w='full'
+          mb='50px'
+          left='50%'
+          transform='translate(-50%, 0)'
+          maxW='1200px'
+          bgColor='gray.600'
+          p='10px'
+          borderBottomRadius={8}
+        >
+          <Button onClick={handleClearChat}>New Chat</Button>
+          <Button onClick={toggleColorMode}>
+            {colorMode === 'light' ? 'Dark' : 'Light'}
+          </Button>
         </Flex>
 
-        <FormControl>
-          <Input
-            type='text'
-            onChange={(e) => setInput(e.target.value)}
-            value={input}
-          />
-          <Button onClick={handleSubmit}>Send</Button>
-        </FormControl>
-      </main>
+        <Flex flexDirection='column' w='full' justify='space-between' h='full'>
+          <VStack
+            direction='column'
+            align='left'
+            spacing='10px'
+            w='full'
+            pt='70px'
+            pb='120px'
+          >
+            {chatLog?.map((message, idx) => (
+              <ChatMessage key={idx} {...message} />
+            ))}
+          </VStack>
+
+          <FormControl
+            pb='20px'
+            position='fixed'
+            bottom='20px'
+            left='50%'
+            transform='translate(-50%, 0)'
+            maxW='1200px'
+          >
+            <Flex align='center'>
+              <Input
+                type='text'
+                onChange={(e) => setInput(e.target.value)}
+                value={input}
+                mr='10px'
+                onKeyDown={handleKeydown}
+                bgColor='gray.600'
+                p='25px'
+                color='gray.200'
+              />
+              <Button
+                onClick={handleSubmit}
+                bgColor='gray.600'
+                color='white'
+                p='25px'
+                _hover={{ color: 'gray.800' }}
+              >
+                Send
+              </Button>
+            </Flex>
+          </FormControl>
+        </Flex>
+      </Flex>
     </>
   )
 }
