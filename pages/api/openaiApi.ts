@@ -45,7 +45,7 @@ export default async function handler(
       temperature: 0.6,
     })
     res.status(200).json({ message: response.data.choices[0].text })
-  } catch (error) {
+  } catch (error: any) {
     // Consider adjusting the error handling logic for your use case
     if (error.response) {
       console.error(error.response.status, error.response.data)
