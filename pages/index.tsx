@@ -68,7 +68,7 @@ export default function Home() {
       } catch (error: any) {
         // Consider implementing your own error handling logic here
         console.error(error)
-        alert(error.message)
+        // alert(error.message)
       }
     },
     [chatLog, input]
