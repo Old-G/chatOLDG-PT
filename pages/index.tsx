@@ -65,7 +65,7 @@ export default function Home() {
             new Error(`Request failed with status ${response.status}`)
           )
         }
-      } catch (error) {
+      } catch (error: any) {
         // Consider implementing your own error handling logic here
         console.error(error)
         alert(error.message)
