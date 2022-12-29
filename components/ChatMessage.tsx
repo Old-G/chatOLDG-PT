@@ -1,4 +1,4 @@
-import { Flex, Text } from '@chakra-ui/react'
+import { Flex, Text, useColorMode } from '@chakra-ui/react'
 import React from 'react'
 
 type ChatMessageProps = {
@@ -7,6 +7,8 @@ type ChatMessageProps = {
 }
 
 const ChatMessage = ({ message, user }: ChatMessageProps) => {
+  const { colorMode } = useColorMode()
+
   return (
     <Flex
       w='full'
@@ -16,10 +18,17 @@ const ChatMessage = ({ message, user }: ChatMessageProps) => {
       p='15px'
       borderRadius={8}
     >
-      <Text color='blue.500' w='80px' mr='10px'>
+      <Text color='blue.400' w='80px' mr='10px'>
         {user || 'oldg-pt'}
       </Text>
-      <Text w='full'>{message}</Text>
+      <Text
+        color={
+          colorMode === 'dark' && user === 'oldg-pt' ? 'white' : 'gray.900'
+        }
+        w='full'
+      >
+        {message}
+      </Text>
     </Flex>
   )
 }

@@ -1,18 +1,19 @@
 import Head from 'next/head'
 import Image from 'next/image'
 import { Inter } from '@next/font/google'
-import styles from '../styles/Home.module.css'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { GiHamburgerMenu } from 'react-icons/gi'
 import {
   Button,
   Flex,
-  FormControl,
-  Input,
-  Text,
+  IconButton,
   VStack,
-  useColorMode,
+  useDisclosure,
 } from '@chakra-ui/react'
 import ChatMessage from '../components/ChatMessage'
+import MenuButton from '../components/MenuButton'
+import ChatInput from '../components/ChatInput'
+import useStorage from '../hooks/useStorage'
 
 export default function Home() {
   const [input, setInput] = useState('')
@@ -22,7 +23,16 @@ export default function Home() {
       message: 'Hello, how I can help you today?',
     },
   ])
-  const { colorMode, toggleColorMode } = useColorMode()
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const btnRef = useRef(null)
+  const [name, setName] = useState<string | null>('')
+  const { empty } = useStorage('username')
+
+  useEffect(() => {
+    if (!empty) {
+      setName(localStorage.getItem('username'))
+    }
+  }, [empty])
 
   const handleClearChat = useCallback(() => {
     setChatLog([
@@ -32,92 +42,6 @@ export default function Home() {
       },
     ])
   }, [])
-
-  const handleSubmit = useCallback(
-    async (e: { preventDefault: () => void }) => {
-      e.preventDefault()
-      let chatLogNew = [...chatLog, { user: 'me', message: `${input}` }]
-
-      setInput('')
-      setChatLog(chatLogNew)
-
-      try {
-        const messages = chatLogNew
-          ?.map((message: { message: string }) => message.message)
-          .join('\n')
-
-        const response = await fetch('/api/openaiApi', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            message: messages,
-          }),
-        })
-
-        const data = await response.json()
-        setChatLog([...chatLogNew, { user: 'oldg-pt', message: data?.message }])
-
-        if (response.status !== 200) {
-          throw (
-            data.error ||
-            new Error(`Request failed with status ${response.status}`)
-          )
-        }
-      } catch (error: any) {
-        // Consider implementing your own error handling logic here
-        console.error(error)
-        alert(error.message)
-      }
-    },
-    [chatLog, input]
-  )
-
-  const handleKeydown = useCallback(
-    async (event: { key: string }) => {
-      if (event.key === 'Enter') {
-        let chatLogNew = [...chatLog, { user: 'me', message: `${input}` }]
-
-        setInput('')
-        setChatLog(chatLogNew)
-
-        try {
-          const messages = chatLogNew
-            ?.map((message: { message: string }) => message.message)
-            .join('\n')
-
-          const response = await fetch('/api/openaiApi', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              message: messages,
-            }),
-          })
-
-          const data = await response.json()
-          setChatLog([
-            ...chatLogNew,
-            { user: 'oldg-pt', message: data?.message },
-          ])
-
-          if (response.status !== 200) {
-            throw (
-              data.error ||
-              new Error(`Request failed with status ${response.status}`)
-            )
-          }
-        } catch (error: any) {
-          // Consider implementing your own error handling logic here
-          console.error(error)
-          alert(error.message)
-        }
-      }
-    },
-    [chatLog, input]
-  )
 
   return (
     <>
@@ -149,57 +73,48 @@ export default function Home() {
           borderBottomRadius={8}
         >
           <Button onClick={handleClearChat}>New Chat</Button>
-          <Button onClick={toggleColorMode}>
-            {colorMode === 'light' ? 'Dark' : 'Light'}
-          </Button>
+
+          <IconButton
+            variant='outline'
+            colorScheme='teal'
+            aria-label='Send email'
+            icon={<GiHamburgerMenu />}
+            color='blue.400'
+            ref={btnRef}
+            onClick={onOpen}
+          />
         </Flex>
 
-        <Flex flexDirection='column' w='full' justify='space-between' h='full'>
+        <Flex flexDirection='column' w='full' justify='end' h='100vh'>
           <VStack
             direction='column'
             align='left'
             spacing='10px'
             w='full'
             pt='70px'
-            pb='120px'
+            pb='50px'
           >
             {chatLog?.map((message, idx) => (
               <ChatMessage key={idx} {...message} />
             ))}
           </VStack>
 
-          <FormControl
-            pb='20px'
-            position='fixed'
-            bottom='20px'
-            left='50%'
-            transform='translate(-50%, 0)'
-            maxW='1200px'
-          >
-            <Flex align='center'>
-              <Input
-                type='text'
-                onChange={(e) => setInput(e.target.value)}
-                value={input}
-                mr='10px'
-                onKeyDown={handleKeydown}
-                bgColor='gray.600'
-                p='25px'
-                color='gray.200'
-              />
-              <Button
-                onClick={handleSubmit}
-                bgColor='gray.600'
-                color='white'
-                p='25px'
-                _hover={{ color: 'gray.800' }}
-              >
-                Send
-              </Button>
-            </Flex>
-          </FormControl>
+          <ChatInput
+            input={input}
+            setInput={setInput}
+            chatLog={chatLog}
+            setChatLog={setChatLog}
+            name={name}
+          />
         </Flex>
       </Flex>
+
+      <MenuButton
+        isOpen={isOpen}
+        onClose={onClose}
+        btnRef={btnRef}
+        username={name}
+      />
     </>
   )
 }
