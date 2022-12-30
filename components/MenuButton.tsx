@@ -25,15 +25,18 @@ type MenuButtonProps = {
 
 const MenuButton = ({ isOpen, onClose, btnRef, username }: MenuButtonProps) => {
   const { colorMode, toggleColorMode } = useColorMode()
-  const [name, setName] = useState('')
+  const [name, setName] = useState<string | null>(username)
+
+  console.log(username)
 
   const handleChange = (e: { target: { value: any } }) => {
     setName(e.target.value)
   }
 
   const handleSaveName = useCallback(() => {
-    localStorage.setItem('username', name)
-  }, [name])
+    localStorage.setItem('username', name || '')
+    onClose()
+  }, [name, onClose])
 
   return (
     <Drawer
@@ -58,13 +61,14 @@ const MenuButton = ({ isOpen, onClose, btnRef, username }: MenuButtonProps) => {
               cursor='pointer'
             />
           </Flex>
-          <Input placeholder='Update your name' onChange={handleChange} />
+          <Input
+            placeholder='Update your name'
+            value={username || ''}
+            onChange={handleChange}
+          />
         </DrawerBody>
 
         <DrawerFooter>
-          <Button variant='outline' mr={3} onClick={onClose}>
-            Cancel
-          </Button>
           <Button colorScheme='blue' onClick={handleSaveName}>
             Save
           </Button>

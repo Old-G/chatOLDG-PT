@@ -56,7 +56,7 @@ export default function Home() {
         maxW='1200px'
         align='center'
         m='0 auto'
-        p='0 30px'
+        p='0 10px'
         h='100vh'
       >
         <Flex

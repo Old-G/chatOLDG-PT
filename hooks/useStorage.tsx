@@ -7,7 +7,6 @@ const useStorage = (storageName: string) => {
     const storedData = localStorage.getItem(key)
     if (!storedData) {
       setEmpty(true)
-      console.log('Local storage is empty')
     } else {
       setEmpty(false)
     }

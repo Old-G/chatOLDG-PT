@@ -41,8 +41,8 @@ export default async function handler(
     const response = await openai.createCompletion({
       model: 'text-davinci-003',
       prompt: message,
-      max_tokens: 100,
-      temperature: 0.6,
+      max_tokens: 2000,
+      temperature: 0.7,
     })
     res.status(200).json({ message: response.data.choices[0].text })
   } catch (error: any) {
